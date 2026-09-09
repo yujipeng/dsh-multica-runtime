@@ -18,7 +18,7 @@ a versioned JSONL protocol over stdio and composes over
 ## Local development
 
 The DSH packages used by this plugin are public npm packages. This checkout is
-currently validated against `@deepseek-ai/dsh@0.1.0-rc.6` and its matching
+currently validated against `@deepseek-ai/dsh@0.1.5-alpha.2` and its matching
 `@deepseek-ai/dsh-*` package family.
 
 ```bash
