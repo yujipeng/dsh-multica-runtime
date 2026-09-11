@@ -512,7 +512,7 @@ async function stdio(ctx: Context): Promise<number> {
   return code
 }
 
-export async function run(ctx: Context, applyAt: number): Promise<void> {
+export async function run(ctx: Context): Promise<void> {
   const appExit = ctx.get('appExit')
   const cmdlineArgs = ctx.get('cmdlineArgs')
   if (appExit === undefined || cmdlineArgs === undefined) {
@@ -529,12 +529,9 @@ export async function run(ctx: Context, applyAt: number): Promise<void> {
         plugin_version: PLUGIN_VERSION,
         protocol_version: PROTOCOL_VERSION,
       })
-      writeDiagnostic(`[timing] probe_frame_ms=${(performance.now() - applyAt).toFixed(1)}`)
       code = 0
     } else {
-      const loaderAt = performance.now()
       await ctx.get('loader')?.await()
-      writeDiagnostic(`[timing] loader_await_ms=${(performance.now() - loaderAt).toFixed(1)}`)
       if (mode === 'list-models') {
         writeFrame({ v: PROTOCOL_VERSION, type: 'models', models: await listModels(ctx) })
         code = 0

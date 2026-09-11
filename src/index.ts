@@ -29,8 +29,6 @@ function parseMode(args: readonly string[]): 'stdio' | 'probe' | 'list-models' {
 }
 
 export function apply(ctx: Context): void {
-  const applyAt = performance.now()
-  writeDiagnostic(`[timing] apply_ms=${applyAt.toFixed(1)}`)
   try {
     const appExit = ctx.get('appExit')
     const cmdlineArgs = ctx.get('cmdlineArgs')
@@ -46,11 +44,10 @@ export function apply(ctx: Context): void {
         plugin_version: PLUGIN_VERSION,
         protocol_version: PROTOCOL_VERSION,
       }))
-      writeDiagnostic(`[timing] probe_frame_ms=${(performance.now() - applyAt).toFixed(1)}`)
       appExit(0)
       return
     }
-    void import('./runtime.js').then(({ run }) => run(ctx, applyAt)).catch((error: unknown) => {
+    void import('./runtime.js').then(({ run }) => run(ctx)).catch((error: unknown) => {
       writeDiagnostic(error instanceof Error ? error.message : String(error))
       appExit(1)
     })
