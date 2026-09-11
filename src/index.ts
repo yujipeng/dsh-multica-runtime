@@ -37,14 +37,20 @@ export function apply(ctx: Context): void {
     }
     const mode = parseMode(cmdlineArgs.get())
     if (mode === 'probe') {
-      process.stdout.write(encodeFrame({
+      const frame = encodeFrame({
         v: PROTOCOL_VERSION,
         type: 'probe',
         runtime: 'dsh',
         plugin_version: PLUGIN_VERSION,
         protocol_version: PROTOCOL_VERSION,
-      }))
-      appExit(0)
+      })
+      // Probe is a one-shot: nothing is mounted, so a direct exit is safe. Going
+      // through ctx.appExit here would route into the launcher's graceful
+      // shutdown, which only sets process.exitCode after disposing the tree and
+      // otherwise leaves the process alive until its 5 s
+      // PROCESS_SHUTDOWN_TIMEOUT_MS fallback force-exits it — a fixed stall on
+      // every probe.
+      process.stdout.write(frame, () => process.exit(0))
       return
     }
     void import('./runtime.js').then(({ run }) => run(ctx)).catch((error: unknown) => {

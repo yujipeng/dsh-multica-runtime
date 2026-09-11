@@ -44,12 +44,14 @@ describe('alpha.2 compatibility contract', () => {
     }
   })
 
-  it('reports the alpha.2 runtime version on the probe protocol frame', async () => {
+  it('reports the alpha.2 runtime version on the probe protocol frame', () => {
     const output: string[] = []
-    const write = vi.spyOn(process.stdout, 'write').mockImplementation(((chunk: string | Uint8Array) => {
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(((chunk: string | Uint8Array, callback?: (error?: Error) => void) => {
       output.push(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8'))
+      callback?.()
       return true
     }) as typeof process.stdout.write)
+    const exit = vi.spyOn(process, 'exit').mockImplementation((() => {}) as typeof process.exit)
     const appExit = vi.fn()
     const context = {
       get(key: string) {
@@ -60,22 +62,24 @@ describe('alpha.2 compatibility contract', () => {
     } as unknown as Context
 
     apply(context)
-    await vi.waitFor(() => expect(appExit).toHaveBeenCalledWith(0))
 
     expect(JSON.parse(output.join(''))).toMatchObject({
       type: 'probe',
       protocol_version: 1,
       plugin_version: '0.1.0-alpha.2',
     })
-    write.mockRestore()
+    expect(exit).toHaveBeenCalledWith(0)
+    expect(appExit).not.toHaveBeenCalled()
   })
 
-  it('does not await the loader before returning the probe frame', async () => {
+  it('does not await the loader before returning the probe frame', () => {
     const output: string[] = []
-    const write = vi.spyOn(process.stdout, 'write').mockImplementation(((chunk: string | Uint8Array) => {
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(((chunk: string | Uint8Array, callback?: (error?: Error) => void) => {
       output.push(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8'))
+      callback?.()
       return true
     }) as typeof process.stdout.write)
+    const exit = vi.spyOn(process, 'exit').mockImplementation((() => {}) as typeof process.exit)
     const appExit = vi.fn()
     const loaderAwait = vi.fn(() => new Promise<void>(() => {}))
     const context = {
@@ -88,11 +92,10 @@ describe('alpha.2 compatibility contract', () => {
     } as unknown as Context
 
     apply(context)
-    await vi.waitFor(() => expect(appExit).toHaveBeenCalledWith(0))
 
     expect(loaderAwait).not.toHaveBeenCalled()
     expect(JSON.parse(output.join(''))).toMatchObject({ type: 'probe', protocol_version: 1 })
-    write.mockRestore()
+    expect(exit).toHaveBeenCalledWith(0)
   })
 
   it('awaits the loader before listing models', async () => {
@@ -102,6 +105,7 @@ describe('alpha.2 compatibility contract', () => {
       return true
     }) as typeof process.stdout.write)
     const appExit = vi.fn()
+    const exit = vi.spyOn(process, 'exit').mockImplementation((() => {}) as typeof process.exit)
     let releaseLoader: (() => void) | undefined
     const loaderAwait = vi.fn(() => new Promise<void>((resolve) => {
       releaseLoader = resolve
@@ -125,10 +129,10 @@ describe('alpha.2 compatibility contract', () => {
 
     apply(context)
     await vi.waitFor(() => expect(loaderAwait).toHaveBeenCalledOnce())
-    expect(appExit).not.toHaveBeenCalled()
+    expect(exit).not.toHaveBeenCalled()
 
     releaseLoader?.()
-    await vi.waitFor(() => expect(appExit).toHaveBeenCalledWith(0))
+    await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(0))
     expect(JSON.parse(output.join(''))).toMatchObject({
       type: 'models',
       models: [{ id: 'test/model', label: 'Model', provider: 'Test', default: true }],

@@ -513,10 +513,9 @@ async function stdio(ctx: Context): Promise<number> {
 }
 
 export async function run(ctx: Context): Promise<void> {
-  const appExit = ctx.get('appExit')
   const cmdlineArgs = ctx.get('cmdlineArgs')
-  if (appExit === undefined || cmdlineArgs === undefined) {
-    throw new Error('the DSH launcher did not provide cmdlineArgs/appExit')
+  if (cmdlineArgs === undefined) {
+    throw new Error('the DSH launcher did not provide cmdlineArgs')
   }
   let code = 1
   try {
@@ -543,7 +542,15 @@ export async function run(ctx: Context): Promise<void> {
     writeDiagnostic(errorMessage(error))
     protocolError('STARTUP_FAILED', errorMessage(error))
   }
-  appExit(code)
+  // Exit directly rather than through ctx.appExit. The launcher's graceful
+  // shutdown only sets process.exitCode after disposing the tree and otherwise
+  // leaves the process alive until its 5 s PROCESS_SHUTDOWN_TIMEOUT_MS fallback
+  // force-exits it — a fixed stall when the event loop still holds handles
+  // (model sockets, the HTTP proxy, ...). Durable work is already finished
+  // before run() returns (session flush and agent dispose happen inside
+  // execute()), and stdout frames are small synchronous pipe writes, so a
+  // direct exit is safe and keeps every one-shot/stdio completion immediate.
+  process.exit(code)
 }
 
 export * from './protocol.js'
