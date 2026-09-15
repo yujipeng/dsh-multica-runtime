@@ -127,6 +127,9 @@ describe('alpha.2 compatibility contract', () => {
       },
     } as unknown as Context
 
+    // 预热 runtime 模块缓存：apply() 内部会动态 import('./runtime.js') 并拉起
+    // 一整套 DSH 重依赖，冷加载在慢机器上可能超过 vi.waitFor 的默认 1s 超时。
+    await import('../src/runtime.js')
     apply(context)
     await vi.waitFor(() => expect(loaderAwait).toHaveBeenCalledOnce())
     expect(exit).not.toHaveBeenCalled()
