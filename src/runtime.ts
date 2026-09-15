@@ -422,7 +422,8 @@ async function stdio(ctx: Context): Promise<number> {
     // "requires a task-scoped mat_ token" refusal on the agent's first
     // `multica` call (MUL-6186).
     writeDiagnostic(
-      'MULTICA_TOKEN is not reaching model-spawned subprocesses; in-task multica commands will be refused',
+      `multica terminal environment is not reaching model-spawned subprocesses; ` +
+        `in-task multica commands may be refused (forwarded: ${forwarding.names.join(', ')})`,
     )
   }
   const activeRef: { current?: ActiveRun; finished: boolean } = { finished: false }

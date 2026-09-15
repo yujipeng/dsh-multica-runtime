@@ -153,3 +153,20 @@ multica daemon logs --lines 100
 `MULTICA_DSH_PATH`。从 shell 启动 daemon，或把这些变量写入 daemon 使用的
 启动环境后，再运行 `multica daemon restart`。确认后即可继续使用单机
 `multica` profile；本指南不涉及多机或多 profile 路由。
+
+## 7. 转发 agent 凭据到 shell
+
+DSH 会把环境变量名中包含 `KEY`、`PASSWORD`、`SECRET` 或 `TOKEN` 的变量从
+agent 生成的子进程里剥掉，因此配置在 agent 上的第三方 skill 凭据（如
+`WEKNORA_API_KEY`）默认无法到达 shell。需要时，在 Multica 中给对应 agent
+增加一个环境变量，值为逗号分隔的变量名列表：
+
+```sh
+MULTICA_FORWARD_ENV=WEKNORA_API_KEY
+```
+
+只列出确实需要穿过的"凭证形状"变量名：
+
+- 不含敏感词的变量（如 `WEKNORA_BASE_URL`、`PATH`）本就能通过，无需列出；
+- 模型提供商凭据（`DEEPSEEK_API_KEY`、`OPENAI_API_KEY` 等）绝不能列入，
+  否则会泄漏进 agent 的 shell。

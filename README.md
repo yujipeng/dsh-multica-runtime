@@ -60,9 +60,35 @@ The runtime contract includes:
   streamable-HTTP clients;
 - per-runtime/agent session roots supplied by the Multica daemon;
 - headless one-shot approvals, with no interactive question surface.
-- narrowly forwards only Multica's server-minted `mat_` task token into DSH's
-  otherwise credential-scrubbed shell, so in-task `multica` commands retain
-  task attribution without exposing model-provider credentials.
+- narrowly forwards only Multica's server-minted `mat_` task token — plus any
+  variable names an agent explicitly lists in `MULTICA_FORWARD_ENV` — into
+  DSH's otherwise credential-scrubbed shell, so in-task `multica` commands
+  retain task attribution and explicitly-authorized agent credentials (such as
+  a third-party skill's `WEKNORA_API_KEY`) reach the shell without exposing
+  model-provider credentials.
+
+## Forwarding agent credentials to the shell
+
+DSH scrubs any ambient environment variable whose name contains `KEY`,
+`PASSWORD`, `SECRET`, or `TOKEN` from agent-spawned subprocesses. A
+credential-shaped variable configured on a Multica agent — for example a
+third-party skill's `WEKNORA_API_KEY` — therefore never reaches the shell by
+default.
+
+To forward such variables, add an agent environment variable listing their
+names, comma-separated:
+
+```bash
+MULTICA_FORWARD_ENV=WEKNORA_API_KEY
+```
+
+Entries are trimmed and deduplicated. List only the credential-shaped names the
+agent actually needs:
+
+- names without a sensitive token (`WEKNORA_BASE_URL`, `PATH`, ...) already
+  pass through — no need to list them;
+- model-provider credentials (`DEEPSEEK_API_KEY`, `OPENAI_API_KEY`, ...) must
+  never be listed, or they would leak into the agent's shell.
 
 The local `.local/` tree is ignored. It may hold an isolated DSH home and a
 development launcher, but neither belongs in source control.
