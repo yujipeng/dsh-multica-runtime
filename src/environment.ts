@@ -25,7 +25,7 @@ export interface TerminalEnvironmentReport {
  * DSH deliberately removes credential-shaped ambient variables from every
  * model-spawned subprocess. Multica forwards a narrow, explicitly-authorized
  * set through that scrub: the server-minted `mat_` task token, plus any names
- * an agent lists in `MULTICA_FORWARD_ENV` (for example a third-party skill
+ * an agent lists in `FORWARD_ENV_NAMES` (for example a third-party skill
  * credential such as `WEKNORA_API_KEY`). A user PAT or model-provider
  * credential must never pass through this path.
  */
