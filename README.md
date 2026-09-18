@@ -61,7 +61,7 @@ The runtime contract includes:
 - per-runtime/agent session roots supplied by the Multica daemon;
 - headless one-shot approvals, with no interactive question surface.
 - narrowly forwards only Multica's server-minted `mat_` task token — plus any
-  variable names an agent explicitly lists in `MULTICA_FORWARD_ENV` — into
+  variable names an agent explicitly lists in `FORWARD_ENV_NAMES` — into
   DSH's otherwise credential-scrubbed shell, so in-task `multica` commands
   retain task attribution and explicitly-authorized agent credentials (such as
   a third-party skill's `WEKNORA_API_KEY`) reach the shell without exposing
@@ -79,8 +79,12 @@ To forward such variables, add an agent environment variable listing their
 names, comma-separated:
 
 ```bash
-MULTICA_FORWARD_ENV=WEKNORA_API_KEY
+FORWARD_ENV_NAMES=WEKNORA_API_KEY
 ```
+
+The control variable name must not start with `MULTICA_` or `DSH_`: the Multica
+daemon drops `MULTICA_`-prefixed custom env, and DSH reserves the `DSH_`
+namespace for its own use.
 
 Entries are trimmed and deduplicated. List only the credential-shaped names the
 agent actually needs:

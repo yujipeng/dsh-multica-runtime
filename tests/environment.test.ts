@@ -6,7 +6,7 @@ import {
   exemptTaskTokenOn,
   installMulticaTerminalEnvironment,
 } from '../src/environment.js'
-import { forwardedEnvironmentNames } from '../src/task-env.js'
+import { FORWARD_ENV_KEYS_KEY, forwardedEnvironmentNames } from '../src/task-env.js'
 
 /** DSH's own credential-name matcher, cloned so a test never patches the real one. */
 function scrubPattern(): RegExp {
@@ -38,7 +38,7 @@ describe('forwardedEnvironmentNames', () => {
   it('forwards only a task-scoped token plus explicitly listed names', () => {
     expect(forwardedEnvironmentNames({
       MULTICA_TOKEN: 'mat_task-token',
-      MULTICA_FORWARD_ENV: ' WEKNORA_API_KEY , WEKNORA_BASE_URL ',
+      [FORWARD_ENV_KEYS_KEY]: ' WEKNORA_API_KEY , WEKNORA_BASE_URL ',
       DEEPSEEK_API_KEY: 'provider-secret',
     })).toEqual(['MULTICA_TOKEN', 'WEKNORA_API_KEY', 'WEKNORA_BASE_URL'])
   })
@@ -46,7 +46,7 @@ describe('forwardedEnvironmentNames', () => {
   it('ignores a user PAT as the task token', () => {
     expect(forwardedEnvironmentNames({
       MULTICA_TOKEN: 'mul_user-token',
-      MULTICA_FORWARD_ENV: 'WEKNORA_API_KEY',
+      [FORWARD_ENV_KEYS_KEY]: 'WEKNORA_API_KEY',
     })).toEqual(['WEKNORA_API_KEY'])
   })
 
@@ -59,8 +59,16 @@ describe('forwardedEnvironmentNames', () => {
 
   it('trims and deduplicates the forward list', () => {
     expect(forwardedEnvironmentNames({
-      MULTICA_FORWARD_ENV: ' A , , B , A ',
+      [FORWARD_ENV_KEYS_KEY]: ' A , , B , A ',
     })).toEqual(['A', 'B'])
+  })
+})
+
+describe('FORWARD_ENV_KEYS_KEY', () => {
+  it('uses a control key the daemon forwards and DSH does not scrub', () => {
+    expect(FORWARD_ENV_KEYS_KEY).not.toMatch(/^MULTICA_/)
+    expect(FORWARD_ENV_KEYS_KEY).not.toMatch(/^DSH_/)
+    expect(FORWARD_ENV_KEYS_KEY).not.toMatch(/KEY|PASSWORD|SECRET|TOKEN/i)
   })
 })
 
@@ -163,7 +171,7 @@ describe('installMulticaTerminalEnvironment', () => {
   it('forwards an explicitly listed credential into the shell scrub', async () => {
     vi.stubEnv('WEKNORA_API_KEY', 'sk-weknora')
     vi.stubEnv('WEKNORA_BASE_URL', 'https://os-uat.tcredit.com/api/v1')
-    vi.stubEnv('MULTICA_FORWARD_ENV', 'WEKNORA_API_KEY')
+    vi.stubEnv(FORWARD_ENV_KEYS_KEY, 'WEKNORA_API_KEY')
     vi.stubEnv('DEEPSEEK_API_KEY', 'provider-secret')
     const ctx = fakeContext()
 
@@ -182,7 +190,7 @@ describe('installMulticaTerminalEnvironment', () => {
   it('does not forward an unlisted credential even when another is listed', async () => {
     vi.stubEnv('WEKNORA_API_KEY', 'sk-weknora')
     vi.stubEnv('OTHER_API_KEY', 'other-secret')
-    vi.stubEnv('MULTICA_FORWARD_ENV', 'WEKNORA_API_KEY')
+    vi.stubEnv(FORWARD_ENV_KEYS_KEY, 'WEKNORA_API_KEY')
     const ctx = fakeContext()
 
     await installMulticaTerminalEnvironment(ctx.context)

@@ -162,8 +162,11 @@ agent 生成的子进程里剥掉，因此配置在 agent 上的第三方 skill 
 增加一个环境变量，值为逗号分隔的变量名列表：
 
 ```sh
-MULTICA_FORWARD_ENV=WEKNORA_API_KEY
+FORWARD_ENV_NAMES=WEKNORA_API_KEY
 ```
+
+控制变量名不能以 `MULTICA_` 或 `DSH_` 开头：前者会被 Multica daemon 拦截丢弃，
+后者属于 DSH 保留命名空间。
 
 只列出确实需要穿过的"凭证形状"变量名：
 
