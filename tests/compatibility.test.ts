@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Context } from '@deepseek-ai/cordis'
 import { apply, inject } from '../src/index.js'
+import { PLUGIN_VERSION } from '../src/version.js'
 
 const root = resolve(import.meta.dirname, '..')
 
@@ -17,22 +18,70 @@ const dshPackages = [
   '@deepseek-ai/dsh-user-approval',
 ]
 
-describe('alpha.2 compatibility contract', () => {
+const cordisPackages = [
+  '@deepseek-ai/cordis',
+  '@deepseek-ai/cordis-plugin-loader',
+]
+
+// pnpm is the only package manager this repo uses, so pnpm-lock.yaml is the
+// only lockfile name that could reappear here.
+const lockfiles = ['pnpm-lock.yaml']
+
+type Manifest = {
+  peerDependencies: Record<string, string>
+  devDependencies: Record<string, string>
+}
+
+async function readManifest(): Promise<Manifest> {
+  return JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8')) as Manifest
+}
+
+describe('DSH dependency compatibility contract', () => {
   it('only gates plugin application on launcher arguments', () => {
     expect(inject).toEqual(['cmdlineArgs'])
   })
 
-  it('pins DSH and Cordis peer/dev dependencies to the validated releases', async () => {
-    const manifest = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8')) as {
-      peerDependencies: Record<string, string>
-      devDependencies: Record<string, string>
+  // The DSH package family must resolve as one in-step set: a caret range so
+  // patch releases float in, identical in both sections so a local install and
+  // a host install cannot drift apart, and converging on a single range so no
+  // two DSH packages can be mixed across versions.
+  it('keeps every DSH package on one caret range across both dependency sections', async () => {
+    const manifest = await readManifest()
+    const ranges = new Set<string>()
+
+    for (const packageName of dshPackages) {
+      const peer = manifest.peerDependencies[packageName]
+      const dev = manifest.devDependencies[packageName]
+
+      expect(peer, `${packageName} peer range`).toMatch(/^\^/)
+      expect(dev, `${packageName} dev range`).toBe(peer)
+      ranges.add(peer)
     }
 
-    for (const section of [manifest.peerDependencies, manifest.devDependencies]) {
-      for (const packageName of dshPackages) expect(section[packageName]).toBe('^0.1.5-alpha.2')
-      expect(section['@deepseek-ai/cordis']).toBe('^4.0.2')
-      expect(section['@deepseek-ai/cordis-plugin-loader']).toBe('^1.0.3')
+    expect([...ranges], 'DSH packages share one version range').toHaveLength(1)
+  })
+
+  it('keeps the Cordis runtime on caret ranges in both dependency sections', async () => {
+    const manifest = await readManifest()
+
+    for (const packageName of cordisPackages) {
+      const peer = manifest.peerDependencies[packageName]
+      expect(peer, `${packageName} peer range`).toMatch(/^\^/)
+      expect(manifest.devDependencies[packageName], `${packageName} dev range`).toBe(peer)
     }
+  })
+
+  // Dependency locking is deliberately dropped: the runtime tracks the current
+  // DSH release channel instead of a pinned resolution. pnpm regenerates a
+  // lockfile on every install, so the guarantee is that it is ignored and never
+  // committed — not that it is absent from the working tree.
+  it('ignores every lockfile so no resolution is ever committed', async () => {
+    const ignored = (await readFile(resolve(root, '.gitignore'), 'utf8'))
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line !== '' && !line.startsWith('#'))
+
+    for (const name of lockfiles) expect(ignored, `${name} is ignored`).toContain(name)
   })
 
   it('disables the renamed session telemetry plugin without changing other plugin ids', async () => {
@@ -44,7 +93,7 @@ describe('alpha.2 compatibility contract', () => {
     }
   })
 
-  it('reports the alpha.2 runtime version on the probe protocol frame', () => {
+  it('reports the plugin version on the probe protocol frame', () => {
     const output: string[] = []
     const write = vi.spyOn(process.stdout, 'write').mockImplementation(((chunk: string | Uint8Array, callback?: (error?: Error) => void) => {
       output.push(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8'))
@@ -66,7 +115,7 @@ describe('alpha.2 compatibility contract', () => {
     expect(JSON.parse(output.join(''))).toMatchObject({
       type: 'probe',
       protocol_version: 1,
-      plugin_version: '0.1.0-alpha.2',
+      plugin_version: PLUGIN_VERSION,
     })
     expect(exit).toHaveBeenCalledWith(0)
     expect(appExit).not.toHaveBeenCalled()

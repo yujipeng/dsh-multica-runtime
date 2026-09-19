@@ -3,14 +3,13 @@ import {
   encodeFrame,
   PROTOCOL_VERSION,
 } from './protocol.js'
+import { PLUGIN_VERSION } from './version.js'
 
 export const name = 'multica-dsh-runtime'
 
 // Probe must be able to run before the full DSH runtime graph is imported.
 // Non-probe modes load the runtime lazily and wait for the loader there.
 export const inject = ['cmdlineArgs']
-
-const PLUGIN_VERSION = '0.1.0-alpha.2'
 
 function writeDiagnostic(message: string): void {
   process.stderr.write(`multica-dsh-runtime: ${message}\n`)

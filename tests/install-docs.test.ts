@@ -10,9 +10,9 @@ describe('Linux and macOS installation guide', () => {
 
     for (const required of [
       '^22.19.0 || >=24.0.0',
-      'npm install --global @deepseek-ai/dsh@alpha',
+      'npm install --global @deepseek-ai/dsh@latest',
       'corepack enable pnpm',
-      'pnpm install --frozen-lockfile',
+      'pnpm install',
       'pnpm check',
       'dsh plugin --profile multica add',
       'DEEPSEEK_API_KEY',
@@ -25,6 +25,9 @@ describe('Linux and macOS installation guide', () => {
     ]) {
       expect(guide).toContain(required)
     }
+
+    // No lockfile is committed, so the guide must not ask for a frozen install.
+    expect(guide).not.toContain('frozen-lockfile')
 
     expect(guide).toMatch(/Linux/i)
     expect(guide).toMatch(/macOS/i)

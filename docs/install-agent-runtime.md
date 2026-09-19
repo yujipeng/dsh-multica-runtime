@@ -26,10 +26,10 @@ POSIX shell 语法，可在 bash 和 zsh 中执行。
 
 ## 2. 安装 DSH
 
-使用 alpha 通道安装 DSH CLI：
+使用 npm 的 `latest` 通道安装 DSH CLI：
 
 ```sh
-npm install --global @deepseek-ai/dsh@alpha
+npm install --global @deepseek-ai/dsh@latest
 dsh --version
 ```
 
@@ -57,7 +57,7 @@ dsh --version
 推荐使用 nvm 或用户级 Node.js 安装，这样全局 npm 目录由当前用户拥有，不需要
 `sudo`。如果 Linux/macOS 使用系统 Node.js 且全局目录不可写，`npm install`
 可能报 `EACCES`：可以改用用户级 Node.js，或仅在确认目标目录属于 npm 全局
-prefix 后执行 `sudo npm install --global @deepseek-ai/dsh@alpha`。不要为了绕过
+prefix 后执行 `sudo npm install --global @deepseek-ai/dsh@latest`。不要为了绕过
 权限问题给整个 home 目录或 npm 目录执行宽泛的 `chmod`。
 
 ## 3. 设置 DSH_HOME 和 API key
@@ -85,7 +85,7 @@ export DEEPSEEK_API_KEY="<your-deepseek-api-key>"
 
 ```sh
 cd /path/to/dsh-multica-runtime
-pnpm install --frozen-lockfile
+pnpm install
 pnpm check
 pnpm build
 ```

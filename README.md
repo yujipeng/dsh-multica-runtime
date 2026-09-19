@@ -20,9 +20,10 @@ a versioned JSONL protocol over stdio and composes over
 For a complete Linux/macOS installation walkthrough, see the
 [Linux/macOS installation guide](docs/install-agent-runtime.md).
 
-The DSH packages used by this plugin are public npm packages. This checkout is
-currently validated against `@deepseek-ai/dsh@0.1.5-alpha.2` and its matching
-`@deepseek-ai/dsh-*` package family.
+The DSH packages used by this plugin are public npm packages. This checkout
+deliberately pins no resolved dependency graph: the `@deepseek-ai/dsh-*`
+packages float on caret ranges and no lockfile is committed, so a fresh install
+resolves the newest release on the same channel DSH itself is installed from.
 
 ```bash
 pnpm install

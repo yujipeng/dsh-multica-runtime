@@ -31,8 +31,7 @@ import {
   type RuntimeModelFrame,
 } from './protocol.js'
 import { installMulticaTerminalEnvironment } from './environment.js'
-
-const PLUGIN_VERSION = '0.1.0-alpha.2'
+import { PLUGIN_VERSION } from './version.js'
 
 interface ActiveRun {
   command: ExecuteCommand
