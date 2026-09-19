@@ -8,7 +8,7 @@ export const TASK_TOKEN_KEY = 'MULTICA_TOKEN'
  * (for example a third-party skill credential such as `WEKNORA_API_KEY`);
  * never list model-provider credentials (`DEEPSEEK_API_KEY` and friends).
  */
-export const FORWARD_ENV_KEYS_KEY = 'MULTICA_FORWARD_ENV'
+export const FORWARD_ENV_KEYS_KEY = 'FORWARD_ENV_NAMES'
 
 /**
  * The one credential DSH child tools may receive from Multica, unchanged from
@@ -26,7 +26,7 @@ export function multicaTerminalEnvironment(
 /**
  * Environment names the runtime must exempt from DSH's credential scrub.
  * Combines the task-scoped `mat_` token with any names listed in
- * `MULTICA_FORWARD_ENV`, trimmed and deduplicated.
+ * `FORWARD_ENV_NAMES`, trimmed and deduplicated.
  */
 export function forwardedEnvironmentNames(
   environment: NodeJS.ProcessEnv,
