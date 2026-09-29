@@ -169,6 +169,7 @@ describe('installMulticaTerminalEnvironment', () => {
   })
 
   it('forwards an explicitly listed credential into the shell scrub', async () => {
+    vi.stubEnv('MULTICA_TOKEN', 'mul_user-token')
     vi.stubEnv('WEKNORA_API_KEY', 'sk-weknora')
     vi.stubEnv('WEKNORA_BASE_URL', 'https://os-uat.tcredit.com/api/v1')
     vi.stubEnv(FORWARD_ENV_KEYS_KEY, 'WEKNORA_API_KEY')
@@ -188,6 +189,7 @@ describe('installMulticaTerminalEnvironment', () => {
   })
 
   it('does not forward an unlisted credential even when another is listed', async () => {
+    vi.stubEnv('MULTICA_TOKEN', 'mul_user-token')
     vi.stubEnv('WEKNORA_API_KEY', 'sk-weknora')
     vi.stubEnv('OTHER_API_KEY', 'other-secret')
     vi.stubEnv(FORWARD_ENV_KEYS_KEY, 'WEKNORA_API_KEY')
